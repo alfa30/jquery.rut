@@ -18,28 +18,33 @@
 
 //		Para obtener este programa bajo otra licencia, póngase en 
 //		contacto con @pablomarambio en Twitter.
-;(function($){
+(function($){
+	'use strict'
+
 	var defaults = {
 		validateOn: 'blur',
 		formatOn: 'blur',
 		ignoreControlKeys: true
-	};
+	}
 
 	//private methods
 	function clearFormat(value) {
-		return value.replace(/[\.\-]/g, "");
-	};
+		return value.replace(/[\.\-]/g, "")
+	}
+
 	function format(value) {
-		rutAndDv = splitRutAndDv(value);
-		var cRut = rutAndDv[0]; var cDv = rutAndDv[1];
-		if(!(cRut && cDv)) return cRut || value;
-		var rutF = "";
+		var rutAndDv = splitRutAndDv(value)
+		var cRut = rutAndDv[0]
+		var cDv = rutAndDv[1]
+		if(!(cRut && cDv)) return cRut || value
+		var rutF = ""
 		while(cRut.length > 3) {
-			rutF = "." + cRut.substr(cRut.length - 3) + rutF;
-			cRut = cRut.substring(0, cRut.length - 3);
+			rutF = "." + cRut.substr(cRut.length - 3) + rutF
+			cRut = cRut.substring(0, cRut.length - 3)
 		}
-		return cRut + rutF + "-" + cDv;
-	};
+		return cRut + rutF + "-" + cDv
+	}
+
 	function isControlKey(e) {
 		return e.type && e.type.match(/^key(up|down|press)/) &&
 			(
@@ -54,50 +59,58 @@
 				e.keyCode == 39 || // arrow
 				e.keyCode == 40 || // arrow
 				e.keyCode == 91    // command
-			);
-	};
+			)
+	}
+
 	function isValidRut(rut) {
-		if(typeof(rut) !== 'string') return false;
-		var cRut = clearFormat(rut);
-		if(cRut.length < 2) return false;
-		var cDv = cRut.charAt(cRut.length - 1).toUpperCase();
-		var nRut = parseInt(cRut.substr(0, cRut.length - 1));
-		if(nRut === NaN) return false;
-		return computeDv(nRut).toString().toUpperCase() === cDv;
-	};
+		if(typeof(rut) !== 'string') return false
+		var cRut = clearFormat(rut)
+		if(cRut.length < 2) return false
+		var cDv  = cRut.charAt(cRut.length - 1).toUpperCase()
+		var nRut = parseInt(cRut.substr(0, cRut.length - 1))
+		if(nRut === NaN) return false
+		return computeDv(nRut).toString().toUpperCase() === cDv
+	}
+
 	function computeDv(rut) {
-		var suma	= 0;
-		var mul		= 2;
-		if(typeof(rut) !== 'number') return;
-		rut = rut.toString();
+		var suma = 0
+		var mul  = 2
+		if(typeof(rut) !== 'number') return NaN
+		rut = rut.toString()
 		for(var i=rut.length -1;i >= 0;i--) {
-			suma = suma + rut.charAt(i) * mul;
-			mul = ( mul + 1 ) % 8 || 2;
+			suma = suma + rut.charAt(i) * mul
+			mul  = ( mul + 1 ) % 8 || 2
 		}
 		switch(suma % 11) {
-			case 1	: return 'k';
-			case 0	: return 0;
-			default	: return 11 - (suma % 11);
+			case 1 : return 'k'
+				break
+			case 0 : return 0
+				break
+			default	: return 11 - (suma % 11)
+				break
 		}
-	};
+	}
+
 	function formatInput($input, e) {
-		$input.val(format($input.val()));
-	};
+		$input.val(format($input.val()))
+	}
+
 	function validateInput($input, e) {
 		if(isValidRut($input.val())) {
-			$input.trigger('rutValido', splitRutAndDv($input.val()));
+			$input.trigger('rutValido', splitRutAndDv($input.val()))
 		} else {
-			$input.trigger('rutInvalido');
+			$input.trigger('rutInvalido')
 		}
-	};
+	}
+
 	function splitRutAndDv(rut) {
-		var cValue = clearFormat(rut);
-		if(cValue.length == 0) return [null, null];
-		if(cValue.length == 1) return [cValue, null];
-		var cDv = cValue.charAt(cValue.length - 1);
-		var cRut = cValue.substring(0, cValue.length - 1);
-		return [cRut, cDv];
-	};
+		var cValue = clearFormat(rut)
+		if(cValue.length == 0) return [null, null]
+		if(cValue.length == 1) return [cValue, null]
+		var cDv = cValue.charAt(cValue.length - 1)
+		var cRut = cValue.substring(0, cValue.length - 1)
+		return [cRut, cDv]
+	}
 
 	// public methods
 	var methods = {
@@ -105,45 +118,68 @@
 			if (this.length > 1) {
 				/* Valida multiples objetos a la vez */
 				for (var i = 0; i < this.length; i++) {
-					console.log(this[i]);
-					$(this[i]).rut(options);
-				};
+					console.log(this[i])
+					$(this[i]).rut(options)
+				}
 			} else {
-				var that = this;
-				that.opts = $.extend({}, defaults, options);
+				var that = this
+				that.opts = $.extend({}, defaults, options)
 				that.opts.formatOn && that.on(that.opts.formatOn, function(e) { 
-					if(that.opts.ignoreControlKeys && isControlKey(e)) return;
-					formatInput(that, e);
-				});
+					if(that.opts.ignoreControlKeys && isControlKey(e)) return NaN
+					formatInput(that, e)
+				})
 				that.opts.validateOn && that.on(that.opts.validateOn, function(e) { 
-					validateInput(that, e);
-				});
+					validateInput(that, e)
+				})
 			}
-			return this;
+			return this
 		}
-	};
+	}
 
 	$.fn.rut = function(methodOrOptions) {
 		if(methods[methodOrOptions]) {
-			return methods[methodOrOptions].apply(this, Array.prototype.slice.call( arguments, 1 ));
+			return methods[methodOrOptions].apply(this, Array.prototype.slice.call( arguments, 1 ))
 		} else if ( typeof methodOrOptions === 'object' || ! methodOrOptions ) {
-			return methods.init.apply( this, arguments );
+			return methods.init.apply( this, arguments )
 		} else {
-			$.error("El método " + methodOrOptions + " no existe en jQuery.rut");
+			$.error("El método " + methodOrOptions + " no existe en jQuery.rut")
 		}
-	};
+	}
 
 	$.formatRut = function(rut) {
-		return format(rut);
+		return format(rut)
 	}
 
 	$.validateRut = function(rut, fn) {
 		if(isValidRut(rut)) {
-			var rd = splitRutAndDv(rut);
-			$.isFunction(fn) && fn(rd[0], rd[1]);
-			return true;
+			var rd = splitRutAndDv(rut)
+			$.isFunction(fn) && fn(rd[0], rd[1])
+			return true
 		} else {
-			return false;
+			return false
 		}
 	}
-})(jQuery);
+
+	$(function(){
+		var stopDrValidaRut = window.stopDrValidaRut
+		if (stopDrValidaRut == null || stopDrValidaRut == false) {
+			$("[validarut]").each(function(key,elem){
+				var elem = $(elem)
+				var config = {}
+				var dataFormatRut = elem.data('format-on')
+				var dataValidateOn = elem.data('validate-on')
+
+				if (dataFormatRut!='' && dataFormatRut!=null) {
+					config.formatOn = dataFormatRut
+				}
+
+				if (dataValidateOn!='' && dataValidateOn!=null) {
+					config.validateOn = dataValidateOn
+				}
+
+				elem.rut(config)
+			})
+		}
+	})
+
+})(jQuery)
